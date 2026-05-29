@@ -1,9 +1,9 @@
 import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
-import { and, asc, eq, max } from 'drizzle-orm'
+import { and, asc, count, eq, max } from 'drizzle-orm'
 import { db } from '../db'
-import { habits as habitsTable } from '../db/schema'
+import { habits as habitsTable, habitLogs } from '../db/schema'
 import { requireAuth } from '../lib/middleware'
 
 const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Invalid hex color')
@@ -92,4 +92,25 @@ export const habitsRoutes = new Hono()
 
     if (!archived) return c.json({ error: 'Habit not found' }, 404)
     return c.json(archived)
+  })
+  .delete('/:id', async (c) => {
+    const user = c.get('user')
+    const id = c.req.param('id')
+
+    const habit = await db.query.habits.findFirst({
+      where: and(eq(habitsTable.id, id), eq(habitsTable.userId, user.id)),
+    })
+    if (!habit) return c.json({ error: 'Habit not found' }, 404)
+
+    const [logs] = await db
+      .select({ value: count() })
+      .from(habitLogs)
+      .where(and(eq(habitLogs.habitId, id), eq(habitLogs.userId, user.id)))
+
+    if ((logs?.value ?? 0) > 0) {
+      return c.json({ error: 'Cannot delete a habit with logged completions; archive it instead' }, 409)
+    }
+
+    await db.delete(habitsTable).where(and(eq(habitsTable.id, id), eq(habitsTable.userId, user.id)))
+    return c.json({ success: true })
   })
