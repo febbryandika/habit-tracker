@@ -27,6 +27,14 @@ const listQuery = z.object({
   archived: z.enum(['true', 'false']).optional(),
 })
 
+const updateHabit = z
+  .object({
+    name: z.string().trim().min(1).max(100).optional(),
+    emoji: z.string().min(1).max(8).optional(),
+    color: hexColor.optional(),
+  })
+  .refine((o) => Object.keys(o).length > 0, { message: 'No fields to update' })
+
 // All habit routes require a session; every query is scoped by userId.
 export const habitsRoutes = new Hono()
   .use(requireAuth)
@@ -57,4 +65,18 @@ export const habitsRoutes = new Hono()
       .orderBy(asc(habitsTable.sortOrder), asc(habitsTable.createdAt))
 
     return c.json(rows)
+  })
+  .put('/:id', validate('json', updateHabit), async (c) => {
+    const user = c.get('user')
+    const id = c.req.param('id')
+    const updates = c.req.valid('json')
+
+    const [updated] = await db
+      .update(habitsTable)
+      .set(updates)
+      .where(and(eq(habitsTable.id, id), eq(habitsTable.userId, user.id)))
+      .returning()
+
+    if (!updated) return c.json({ error: 'Habit not found' }, 404)
+    return c.json(updated)
   })
