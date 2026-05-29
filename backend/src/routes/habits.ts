@@ -35,6 +35,10 @@ const updateHabit = z
   })
   .refine((o) => Object.keys(o).length > 0, { message: 'No fields to update' })
 
+const reorderHabit = z.object({
+  sortOrder: z.number().int().min(0),
+})
+
 // All habit routes require a session; every query is scoped by userId.
 export const habitsRoutes = new Hono()
   .use(requireAuth)
@@ -113,4 +117,18 @@ export const habitsRoutes = new Hono()
 
     await db.delete(habitsTable).where(and(eq(habitsTable.id, id), eq(habitsTable.userId, user.id)))
     return c.json({ success: true })
+  })
+  .patch('/:id/order', validate('json', reorderHabit), async (c) => {
+    const user = c.get('user')
+    const id = c.req.param('id')
+    const { sortOrder } = c.req.valid('json')
+
+    const [updated] = await db
+      .update(habitsTable)
+      .set({ sortOrder })
+      .where(and(eq(habitsTable.id, id), eq(habitsTable.userId, user.id)))
+      .returning()
+
+    if (!updated) return c.json({ error: 'Habit not found' }, 404)
+    return c.json(updated)
   })

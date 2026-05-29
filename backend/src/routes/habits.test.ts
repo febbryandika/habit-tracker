@@ -39,4 +39,14 @@ describe('habit routes require auth', () => {
     expect(res.status).toBe(401)
     expect(await res.json()).toEqual({ error: 'Unauthorized' })
   })
+
+  it('rejects PATCH /api/habits/:id/order without a session', async () => {
+    const res = await app.request('/api/habits/abc/order', {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ sortOrder: 2 }),
+    })
+    expect(res.status).toBe(401)
+    expect(await res.json()).toEqual({ error: 'Unauthorized' })
+  })
 })
