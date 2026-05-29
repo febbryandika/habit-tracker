@@ -5,7 +5,7 @@ type SessionUser = typeof auth.$Infer.Session.user
 type SessionData = typeof auth.$Infer.Session.session
 
 // Gates a route behind a valid better-auth session and puts the user on context.
-// Used by the habit/log routes added in later steps.
+// Used by /api/me and the habit/log routes added in later steps.
 export const requireAuth = createMiddleware<{
   Variables: { user: SessionUser; session: SessionData }
 }>(async (c, next) => {
