@@ -80,3 +80,16 @@ export const habitsRoutes = new Hono()
     if (!updated) return c.json({ error: 'Habit not found' }, 404)
     return c.json(updated)
   })
+  .delete('/:id/archive', async (c) => {
+    const user = c.get('user')
+    const id = c.req.param('id')
+
+    const [archived] = await db
+      .update(habitsTable)
+      .set({ isArchived: true })
+      .where(and(eq(habitsTable.id, id), eq(habitsTable.userId, user.id)))
+      .returning()
+
+    if (!archived) return c.json({ error: 'Habit not found' }, 404)
+    return c.json(archived)
+  })
