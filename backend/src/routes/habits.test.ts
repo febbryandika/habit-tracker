@@ -11,4 +11,10 @@ describe('habit routes require auth', () => {
     expect(res.status).toBe(401)
     expect(await res.json()).toEqual({ error: 'Unauthorized' })
   })
+
+  it('rejects GET /api/habits without a session', async () => {
+    const res = await app.request('/api/habits')
+    expect(res.status).toBe(401)
+    expect(await res.json()).toEqual({ error: 'Unauthorized' })
+  })
 })
