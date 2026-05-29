@@ -1,0 +1,12 @@
+{
+  "name": "habit-tracker",
+  "private": true,
+  "type": "module",
+  "workspaces": ["backend", "frontend"],
+  "scripts": {
+    "dev": "bun run --filter '*' dev",
+    "dev:backend": "bun run --cwd backend dev",
+    "dev:frontend": "bun run --cwd frontend dev",
+    "typecheck": "bun run --filter '*' typecheck"
+  }
+}
