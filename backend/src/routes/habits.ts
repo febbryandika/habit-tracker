@@ -93,18 +93,22 @@ export const habitsRoutes = new Hono()
     const dateSet = new Set(dates)
     const { current, longest } = computeStreaks(dates)
 
-    // Completion rate over the last 30 days (today + prior 29), as a 0–1 fraction.
-    let last30 = 0
-    for (let i = 0; i < 30; i++) {
-      const day = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10)
-      if (dateSet.has(day)) last30++
+    // Last 84 days (12 weeks), oldest → today, for the heatmap grid.
+    const heatmap: { date: string; completed: boolean }[] = []
+    for (let i = 83; i >= 0; i--) {
+      const date = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10)
+      heatmap.push({ date, completed: dateSet.has(date) })
     }
+
+    // Completion rate over the last 30 days — the trailing 30 heatmap cells.
+    const last30 = heatmap.slice(-30).filter((cell) => cell.completed).length
 
     return c.json({
       current,
       longest,
       completionRate: last30 / 30,
       totalCompletions: dates.length,
+      heatmap,
     })
   })
   .put('/:id', validate('json', updateHabit), async (c) => {
