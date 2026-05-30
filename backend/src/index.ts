@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { auth } from './lib/auth'
 import { requireAuth } from './lib/middleware'
 import { habitsRoutes } from './routes/habits'
+import { logsRoutes } from './routes/logs'
 
 const app = new Hono()
 
@@ -13,6 +14,7 @@ const routes = app
   .get('/api/health', (c) => c.json({ status: 'ok' as const }))
   .get('/api/me', requireAuth, (c) => c.json({ user: c.get('user') }))
   .route('/api/habits', habitsRoutes)
+  .route('/api/logs', logsRoutes)
 
 export type AppType = typeof routes
 export { app }
