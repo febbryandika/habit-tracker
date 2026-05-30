@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { InferRequestType, InferResponseType } from 'hono/client'
 import { client } from '../lib/client'
 import { throwApiError } from '../lib/api-error'
+import { optimisticListUpdate } from '../lib/optimistic'
 
 // Habit shape derived from the API contract — no hand-written duplication.
 export type Habit = InferResponseType<typeof client.api.habits.$get, 200>[number]
@@ -70,6 +71,12 @@ export function useUpdateHabit() {
 
 export function useArchiveHabit() {
   const queryClient = useQueryClient()
+  // Optimistically drop the habit from the active list; it reappears under Archived.
+  const optimistic = optimisticListUpdate<Habit[], string>(
+    queryClient,
+    habitKeys.list(false),
+    (previous, id) => previous?.filter((h) => h.id !== id),
+  )
   return useMutation({
     mutationFn: async (id: string) => {
       const res = await client.api.habits[':id'].archive.$delete({ param: { id } })
@@ -77,24 +84,20 @@ export function useArchiveHabit() {
       return (await res.json()) as Habit
     },
     meta: { successMessage: 'Habit archived' },
-    // Optimistically drop the habit from the active list; it reappears under Archived.
-    onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: habitKeys.list(false) })
-      const previous = queryClient.getQueryData<Habit[]>(habitKeys.list(false))
-      queryClient.setQueryData<Habit[]>(habitKeys.list(false), (old) =>
-        old?.filter((h) => h.id !== id),
-      )
-      return { previous }
-    },
-    onError: (_err, _id, ctx) => {
-      if (ctx?.previous) queryClient.setQueryData(habitKeys.list(false), ctx.previous)
-    },
+    onMutate: optimistic.onMutate,
+    onError: optimistic.onError,
     onSettled: () => queryClient.invalidateQueries({ queryKey: habitKeys.all }),
   })
 }
 
 export function useRestoreHabit() {
   const queryClient = useQueryClient()
+  // Optimistically drop the habit from the archived list; it reappears under Active.
+  const optimistic = optimisticListUpdate<Habit[], string>(
+    queryClient,
+    habitKeys.list(true),
+    (previous, id) => previous?.filter((h) => h.id !== id),
+  )
   return useMutation({
     mutationFn: async (id: string) => {
       const res = await client.api.habits[':id'].unarchive.$delete({ param: { id } })
@@ -102,18 +105,8 @@ export function useRestoreHabit() {
       return (await res.json()) as Habit
     },
     meta: { successMessage: 'Habit restored' },
-    // Optimistically drop the habit from the archived list; it reappears under Active.
-    onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: habitKeys.list(true) })
-      const previous = queryClient.getQueryData<Habit[]>(habitKeys.list(true))
-      queryClient.setQueryData<Habit[]>(habitKeys.list(true), (old) =>
-        old?.filter((h) => h.id !== id),
-      )
-      return { previous }
-    },
-    onError: (_err, _id, ctx) => {
-      if (ctx?.previous) queryClient.setQueryData(habitKeys.list(true), ctx.previous)
-    },
+    onMutate: optimistic.onMutate,
+    onError: optimistic.onError,
     onSettled: () => queryClient.invalidateQueries({ queryKey: habitKeys.all }),
   })
 }
@@ -137,6 +130,11 @@ export function useDeleteHabit() {
 // Accepts the new active-list order; persists only habits whose position changed.
 export function useReorderHabits() {
   const queryClient = useQueryClient()
+  const optimistic = optimisticListUpdate<Habit[], Habit[]>(
+    queryClient,
+    habitKeys.list(false),
+    (_previous, ordered) => ordered.map((habit, index) => ({ ...habit, sortOrder: index })),
+  )
   return useMutation({
     mutationFn: async (ordered: Habit[]) => {
       const changed = ordered
@@ -152,18 +150,8 @@ export function useReorderHabits() {
         }),
       )
     },
-    onMutate: async (ordered) => {
-      await queryClient.cancelQueries({ queryKey: habitKeys.list(false) })
-      const previous = queryClient.getQueryData<Habit[]>(habitKeys.list(false))
-      queryClient.setQueryData<Habit[]>(
-        habitKeys.list(false),
-        ordered.map((habit, index) => ({ ...habit, sortOrder: index })),
-      )
-      return { previous }
-    },
-    onError: (_err, _ordered, ctx) => {
-      if (ctx?.previous) queryClient.setQueryData(habitKeys.list(false), ctx.previous)
-    },
+    onMutate: optimistic.onMutate,
+    onError: optimistic.onError,
     onSettled: () => queryClient.invalidateQueries({ queryKey: habitKeys.list(false) }),
   })
 }
