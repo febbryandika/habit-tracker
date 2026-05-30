@@ -48,6 +48,8 @@ export function useCreateHabit() {
       if (!res.ok) await throwApiError(res)
       return (await res.json()) as Habit
     },
+    // Form renders its own error inline; only toast the success here.
+    meta: { successMessage: 'Habit created', suppressErrorToast: true },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: habitKeys.all }),
   })
 }
@@ -60,6 +62,8 @@ export function useUpdateHabit() {
       if (!res.ok) await throwApiError(res)
       return (await res.json()) as Habit
     },
+    // Form renders its own error inline; only toast the success here.
+    meta: { successMessage: 'Habit updated', suppressErrorToast: true },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: habitKeys.all }),
   })
 }
@@ -72,6 +76,7 @@ export function useArchiveHabit() {
       if (!res.ok) await throwApiError(res)
       return (await res.json()) as Habit
     },
+    meta: { successMessage: 'Habit archived' },
     // Optimistically drop the habit from the active list; it reappears under Archived.
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: habitKeys.list(false) })
@@ -96,6 +101,7 @@ export function useRestoreHabit() {
       if (!res.ok) await throwApiError(res)
       return (await res.json()) as Habit
     },
+    meta: { successMessage: 'Habit restored' },
     // Optimistically drop the habit from the archived list; it reappears under Active.
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: habitKeys.list(true) })
@@ -122,6 +128,8 @@ export function useDeleteHabit() {
       if (!res.ok) await throwApiError(res)
       return (await res.json()) as { success: true }
     },
+    // Confirm dialog renders its own error inline; only toast the success here.
+    meta: { successMessage: 'Habit deleted', suppressErrorToast: true },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: habitKeys.all }),
   })
 }
