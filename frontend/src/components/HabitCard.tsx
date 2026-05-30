@@ -39,10 +39,12 @@ export function HabitCard({ habit }: HabitCardProps) {
       <button
         type="button"
         onClick={handleToggle}
+        disabled={toggle.isPending}
         aria-pressed={completedToday}
+        aria-busy={toggle.isPending}
         aria-label={completedToday ? `Mark ${name} as not done today` : `Mark ${name} as done today`}
         style={completedToday ? { backgroundColor: color, borderColor: color } : undefined}
-        className="grid size-10 shrink-0 place-items-center rounded-full border-2 border-slate-300 transition hover:border-slate-400 focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 focus-visible:outline-none"
+        className="grid size-10 shrink-0 place-items-center rounded-full border-2 border-slate-300 transition hover:border-slate-400 focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
       >
         <svg
           aria-hidden
