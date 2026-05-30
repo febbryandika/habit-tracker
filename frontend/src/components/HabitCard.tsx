@@ -1,5 +1,6 @@
 import type { InferResponseType } from 'hono/client'
 import { client } from '../lib/client'
+import { useToggleCompletion } from '../hooks/useToggleCompletion'
 import { StreakBadge } from './StreakBadge'
 
 export type DashboardHabit = InferResponseType<typeof client.api.dashboard.$get>[number]
@@ -9,10 +10,14 @@ type HabitCardProps = {
 }
 
 // A single habit on the dashboard: emoji, name, streak badge, and a completion
-// toggle. The toggle reflects completedToday here; its behavior is wired in a
-// later task.
+// toggle with optimistic updates.
 export function HabitCard({ habit }: HabitCardProps) {
-  const { name, emoji, color, completedToday, currentStreak } = habit
+  const { id, name, emoji, color, completedToday, currentStreak } = habit
+  const toggle = useToggleCompletion(id)
+
+  function handleToggle() {
+    toggle.mutate()
+  }
 
   return (
     <article className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
@@ -33,6 +38,7 @@ export function HabitCard({ habit }: HabitCardProps) {
 
       <button
         type="button"
+        onClick={handleToggle}
         aria-pressed={completedToday}
         aria-label={completedToday ? `Mark ${name} as not done today` : `Mark ${name} as done today`}
         style={completedToday ? { backgroundColor: color, borderColor: color } : undefined}
