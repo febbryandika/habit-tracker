@@ -5,9 +5,14 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'sonner'
 import { routeTree } from './routeTree.gen'
 import { createAppQueryClient } from './lib/query-client'
+import { ErrorFallback, NotFound } from './components/ErrorFallback'
 import './styles.css'
 
-const router = createRouter({ routeTree })
+const router = createRouter({
+  routeTree,
+  defaultErrorComponent: ErrorFallback,
+  defaultNotFoundComponent: NotFound,
+})
 
 declare module '@tanstack/react-router' {
   interface Register {
