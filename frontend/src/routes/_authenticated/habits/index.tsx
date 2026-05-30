@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useHabits } from '../../../hooks/useHabits'
 import { HabitRow } from '../../../components/HabitRow'
+import { HabitListSkeleton } from '../../../components/HabitListSkeleton'
 
 export const Route = createFileRoute('/_authenticated/habits/')({
   component: HabitsPage,
@@ -55,15 +56,30 @@ function HabitsPage() {
 
       <div className="mt-6">
         {habits.isPending ? (
-          <p className="text-sm text-slate-500">Loading…</p>
+          <HabitListSkeleton />
         ) : habits.isError ? (
           <p role="alert" className="text-sm font-medium text-red-600">
             Couldn't load habits.
           </p>
         ) : habits.data.length === 0 ? (
-          <p className="text-sm text-slate-500">
-            {archived ? 'Nothing archived.' : 'No habits yet.'}
-          </p>
+          <div className="rounded-xl border border-dashed border-slate-300 px-6 py-12 text-center">
+            <p className="text-sm font-medium text-slate-900">
+              {archived ? 'Nothing archived' : 'No habits yet'}
+            </p>
+            <p className="mt-1 text-sm text-slate-500">
+              {archived
+                ? 'Habits you archive will show up here.'
+                : 'Create your first habit to start tracking.'}
+            </p>
+            {archived ? null : (
+              <Link
+                to="/habits/new"
+                className="mt-4 inline-block rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 focus-visible:ring-2 focus-visible:ring-indigo-300"
+              >
+                New habit
+              </Link>
+            )}
+          </div>
         ) : (
           <ul className="space-y-2">
             {habits.data.map((habit) => (
