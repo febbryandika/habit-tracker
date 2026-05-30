@@ -10,7 +10,10 @@ const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Invalid hex color')
 
 // Consistent { error, issues } shape on validation failure (matches the
 // { error } convention used elsewhere).
-const validate = <T extends z.ZodType>(target: 'json' | 'query', schema: T) =>
+// `Target` must stay a literal ('json' | 'query'), not widen to the union —
+// otherwise Hono RPC infers every route as validating both targets, corrupting
+// the typed client (it would demand a bogus `query`/`json` on each call).
+const validate = <Target extends 'json' | 'query', T extends z.ZodType>(target: Target, schema: T) =>
   zValidator(target, schema, (result, c) => {
     if (!result.success) {
       return c.json({ error: 'Invalid input', issues: result.error.issues }, 400)
@@ -96,6 +99,19 @@ export const habitsRoutes = new Hono()
 
     if (!archived) return c.json({ error: 'Habit not found' }, 404)
     return c.json(archived)
+  })
+  .delete('/:id/unarchive', async (c) => {
+    const user = c.get('user')
+    const id = c.req.param('id')
+
+    const [restored] = await db
+      .update(habitsTable)
+      .set({ isArchived: false })
+      .where(and(eq(habitsTable.id, id), eq(habitsTable.userId, user.id)))
+      .returning()
+
+    if (!restored) return c.json({ error: 'Habit not found' }, 404)
+    return c.json(restored)
   })
   .delete('/:id', async (c) => {
     const user = c.get('user')

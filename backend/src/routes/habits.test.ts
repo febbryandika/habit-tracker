@@ -34,6 +34,12 @@ describe('habit routes require auth', () => {
     expect(await res.json()).toEqual({ error: 'Unauthorized' })
   })
 
+  it('rejects DELETE /api/habits/:id/unarchive without a session', async () => {
+    const res = await app.request('/api/habits/abc/unarchive', { method: 'DELETE' })
+    expect(res.status).toBe(401)
+    expect(await res.json()).toEqual({ error: 'Unauthorized' })
+  })
+
   it('rejects DELETE /api/habits/:id without a session', async () => {
     const res = await app.request('/api/habits/abc', { method: 'DELETE' })
     expect(res.status).toBe(401)
