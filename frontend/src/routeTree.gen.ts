@@ -16,6 +16,7 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedHabitsIndexRouteImport } from './routes/_authenticated/habits/index'
 import { Route as AuthenticatedHabitsNewRouteImport } from './routes/_authenticated/habits/new'
+import { Route as AuthenticatedHabitsHabitIdIndexRouteImport } from './routes/_authenticated/habits/$habitId.index'
 import { Route as AuthenticatedHabitsHabitIdEditRouteImport } from './routes/_authenticated/habits/$habitId.edit'
 
 const RegisterRoute = RegisterRouteImport.update({
@@ -53,6 +54,12 @@ const AuthenticatedHabitsNewRoute = AuthenticatedHabitsNewRouteImport.update({
   path: '/habits/new',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedHabitsHabitIdIndexRoute =
+  AuthenticatedHabitsHabitIdIndexRouteImport.update({
+    id: '/habits/$habitId/',
+    path: '/habits/$habitId/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedHabitsHabitIdEditRoute =
   AuthenticatedHabitsHabitIdEditRouteImport.update({
     id: '/habits/$habitId/edit',
@@ -68,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/habits/new': typeof AuthenticatedHabitsNewRoute
   '/habits/': typeof AuthenticatedHabitsIndexRoute
   '/habits/$habitId/edit': typeof AuthenticatedHabitsHabitIdEditRoute
+  '/habits/$habitId/': typeof AuthenticatedHabitsHabitIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -77,6 +85,7 @@ export interface FileRoutesByTo {
   '/habits/new': typeof AuthenticatedHabitsNewRoute
   '/habits': typeof AuthenticatedHabitsIndexRoute
   '/habits/$habitId/edit': typeof AuthenticatedHabitsHabitIdEditRoute
+  '/habits/$habitId': typeof AuthenticatedHabitsHabitIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -88,6 +97,7 @@ export interface FileRoutesById {
   '/_authenticated/habits/new': typeof AuthenticatedHabitsNewRoute
   '/_authenticated/habits/': typeof AuthenticatedHabitsIndexRoute
   '/_authenticated/habits/$habitId/edit': typeof AuthenticatedHabitsHabitIdEditRoute
+  '/_authenticated/habits/$habitId/': typeof AuthenticatedHabitsHabitIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/habits/new'
     | '/habits/'
     | '/habits/$habitId/edit'
+    | '/habits/$habitId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -108,6 +119,7 @@ export interface FileRouteTypes {
     | '/habits/new'
     | '/habits'
     | '/habits/$habitId/edit'
+    | '/habits/$habitId'
   id:
     | '__root__'
     | '/_authenticated'
@@ -118,6 +130,7 @@ export interface FileRouteTypes {
     | '/_authenticated/habits/new'
     | '/_authenticated/habits/'
     | '/_authenticated/habits/$habitId/edit'
+    | '/_authenticated/habits/$habitId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -177,6 +190,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHabitsNewRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/habits/$habitId/': {
+      id: '/_authenticated/habits/$habitId/'
+      path: '/habits/$habitId'
+      fullPath: '/habits/$habitId/'
+      preLoaderRoute: typeof AuthenticatedHabitsHabitIdIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/habits/$habitId/edit': {
       id: '/_authenticated/habits/$habitId/edit'
       path: '/habits/$habitId/edit'
@@ -193,6 +213,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedHabitsNewRoute: typeof AuthenticatedHabitsNewRoute
   AuthenticatedHabitsIndexRoute: typeof AuthenticatedHabitsIndexRoute
   AuthenticatedHabitsHabitIdEditRoute: typeof AuthenticatedHabitsHabitIdEditRoute
+  AuthenticatedHabitsHabitIdIndexRoute: typeof AuthenticatedHabitsHabitIdIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -201,6 +222,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedHabitsNewRoute: AuthenticatedHabitsNewRoute,
   AuthenticatedHabitsIndexRoute: AuthenticatedHabitsIndexRoute,
   AuthenticatedHabitsHabitIdEditRoute: AuthenticatedHabitsHabitIdEditRoute,
+  AuthenticatedHabitsHabitIdIndexRoute: AuthenticatedHabitsHabitIdIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
