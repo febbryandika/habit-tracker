@@ -15,6 +15,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedHabitsIndexRouteImport } from './routes/_authenticated/habits/index'
+import { Route as AuthenticatedHabitsNewRouteImport } from './routes/_authenticated/habits/new'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -46,12 +47,18 @@ const AuthenticatedHabitsIndexRoute =
     path: '/habits/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedHabitsNewRoute = AuthenticatedHabitsNewRouteImport.update({
+  id: '/habits/new',
+  path: '/habits/new',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/habits/new': typeof AuthenticatedHabitsNewRoute
   '/habits/': typeof AuthenticatedHabitsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/': typeof AuthenticatedIndexRoute
+  '/habits/new': typeof AuthenticatedHabitsNewRoute
   '/habits': typeof AuthenticatedHabitsIndexRoute
 }
 export interface FileRoutesById {
@@ -68,13 +76,20 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/habits/new': typeof AuthenticatedHabitsNewRoute
   '/_authenticated/habits/': typeof AuthenticatedHabitsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/register' | '/dashboard' | '/habits/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/register'
+    | '/dashboard'
+    | '/habits/new'
+    | '/habits/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/register' | '/dashboard' | '/' | '/habits'
+  to: '/login' | '/register' | '/dashboard' | '/' | '/habits/new' | '/habits'
   id:
     | '__root__'
     | '/_authenticated'
@@ -82,6 +97,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/_authenticated/dashboard'
     | '/_authenticated/'
+    | '/_authenticated/habits/new'
     | '/_authenticated/habits/'
   fileRoutesById: FileRoutesById
 }
@@ -135,18 +151,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHabitsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/habits/new': {
+      id: '/_authenticated/habits/new'
+      path: '/habits/new'
+      fullPath: '/habits/new'
+      preLoaderRoute: typeof AuthenticatedHabitsNewRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedHabitsNewRoute: typeof AuthenticatedHabitsNewRoute
   AuthenticatedHabitsIndexRoute: typeof AuthenticatedHabitsIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedHabitsNewRoute: AuthenticatedHabitsNewRoute,
   AuthenticatedHabitsIndexRoute: AuthenticatedHabitsIndexRoute,
 }
 
