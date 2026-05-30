@@ -16,6 +16,7 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedHabitsIndexRouteImport } from './routes/_authenticated/habits/index'
 import { Route as AuthenticatedHabitsNewRouteImport } from './routes/_authenticated/habits/new'
+import { Route as AuthenticatedHabitsHabitIdEditRouteImport } from './routes/_authenticated/habits/$habitId.edit'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -52,6 +53,12 @@ const AuthenticatedHabitsNewRoute = AuthenticatedHabitsNewRouteImport.update({
   path: '/habits/new',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedHabitsHabitIdEditRoute =
+  AuthenticatedHabitsHabitIdEditRouteImport.update({
+    id: '/habits/$habitId/edit',
+    path: '/habits/$habitId/edit',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -60,6 +67,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/habits/new': typeof AuthenticatedHabitsNewRoute
   '/habits/': typeof AuthenticatedHabitsIndexRoute
+  '/habits/$habitId/edit': typeof AuthenticatedHabitsHabitIdEditRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -68,6 +76,7 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/habits/new': typeof AuthenticatedHabitsNewRoute
   '/habits': typeof AuthenticatedHabitsIndexRoute
+  '/habits/$habitId/edit': typeof AuthenticatedHabitsHabitIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -78,6 +87,7 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/habits/new': typeof AuthenticatedHabitsNewRoute
   '/_authenticated/habits/': typeof AuthenticatedHabitsIndexRoute
+  '/_authenticated/habits/$habitId/edit': typeof AuthenticatedHabitsHabitIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -88,8 +98,16 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/habits/new'
     | '/habits/'
+    | '/habits/$habitId/edit'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/register' | '/dashboard' | '/' | '/habits/new' | '/habits'
+  to:
+    | '/login'
+    | '/register'
+    | '/dashboard'
+    | '/'
+    | '/habits/new'
+    | '/habits'
+    | '/habits/$habitId/edit'
   id:
     | '__root__'
     | '/_authenticated'
@@ -99,6 +117,7 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/habits/new'
     | '/_authenticated/habits/'
+    | '/_authenticated/habits/$habitId/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -158,6 +177,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHabitsNewRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/habits/$habitId/edit': {
+      id: '/_authenticated/habits/$habitId/edit'
+      path: '/habits/$habitId/edit'
+      fullPath: '/habits/$habitId/edit'
+      preLoaderRoute: typeof AuthenticatedHabitsHabitIdEditRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -166,6 +192,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedHabitsNewRoute: typeof AuthenticatedHabitsNewRoute
   AuthenticatedHabitsIndexRoute: typeof AuthenticatedHabitsIndexRoute
+  AuthenticatedHabitsHabitIdEditRoute: typeof AuthenticatedHabitsHabitIdEditRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -173,6 +200,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedHabitsNewRoute: AuthenticatedHabitsNewRoute,
   AuthenticatedHabitsIndexRoute: AuthenticatedHabitsIndexRoute,
+  AuthenticatedHabitsHabitIdEditRoute: AuthenticatedHabitsHabitIdEditRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
