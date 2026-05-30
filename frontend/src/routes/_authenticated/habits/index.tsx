@@ -1,7 +1,23 @@
 import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useHabits } from '../../../hooks/useHabits'
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { useHabits, useReorderHabits } from '../../../hooks/useHabits'
 import { HabitRow } from '../../../components/HabitRow'
+import { SortableHabitRow } from '../../../components/SortableHabitRow'
 import { HabitListSkeleton } from '../../../components/HabitListSkeleton'
 
 export const Route = createFileRoute('/_authenticated/habits/')({
@@ -19,6 +35,21 @@ function HabitsPage() {
   const [filter, setFilter] = useState<FilterKey>('active')
   const archived = filter === 'archived'
   const habits = useHabits(archived)
+  const reorderHabits = useReorderHabits()
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id || !habits.data) return
+    const oldIndex = habits.data.findIndex((h) => h.id === active.id)
+    const newIndex = habits.data.findIndex((h) => h.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
+    // The hook applies the optimistic cache update and persists changed rows.
+    reorderHabits.mutate(arrayMove(habits.data, oldIndex, newIndex))
+  }
 
   return (
     <section>
@@ -80,14 +111,27 @@ function HabitsPage() {
               </Link>
             )}
           </div>
-        ) : (
+        ) : archived ? (
           <ul className="space-y-2">
             {habits.data.map((habit) => (
               <li key={habit.id}>
-                <HabitRow habit={habit} archived={archived} />
+                <HabitRow habit={habit} archived />
               </li>
             ))}
           </ul>
+        ) : (
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext
+              items={habits.data.map((h) => h.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <ul className="space-y-2">
+                {habits.data.map((habit) => (
+                  <SortableHabitRow key={habit.id} habit={habit} />
+                ))}
+              </ul>
+            </SortableContext>
+          </DndContext>
         )}
       </div>
     </section>

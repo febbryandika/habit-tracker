@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import type { Habit } from '../hooks/useHabits'
 import { useArchiveHabit, useDeleteHabit, useRestoreHabit } from '../hooks/useHabits'
@@ -9,7 +9,15 @@ type PendingAction = 'archive' | 'restore' | 'delete'
 const actionClass =
   'rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-slate-300'
 
-export function HabitRow({ habit, archived }: { habit: Habit; archived: boolean }) {
+export function HabitRow({
+  habit,
+  archived,
+  dragHandle,
+}: {
+  habit: Habit
+  archived: boolean
+  dragHandle?: ReactNode
+}) {
   const archiveHabit = useArchiveHabit()
   const restoreHabit = useRestoreHabit()
   const deleteHabit = useDeleteHabit()
@@ -67,6 +75,7 @@ export function HabitRow({ habit, archived }: { habit: Habit; archived: boolean 
 
   return (
     <div className="flex items-center gap-3 rounded-xl bg-white px-4 py-3 ring-1 ring-slate-200">
+      {dragHandle}
       <span className="text-xl leading-none" aria-hidden="true">
         {habit.emoji}
       </span>
