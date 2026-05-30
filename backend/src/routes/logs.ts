@@ -14,9 +14,19 @@ const validate = <T extends z.ZodType>(target: 'json', schema: T) =>
     }
   })
 
-const toggleLog = z.object({
+// True only for real calendar dates: rejects impossible dates like 2026-02-30
+// or 2026-13-45 (the regex alone would let those through).
+const isRealDate = (date: string): boolean => {
+  const parsed = new Date(`${date}T00:00:00Z`)
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === date
+}
+
+export const toggleLog = z.object({
   habitId: z.string().min(1),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected YYYY-MM-DD'),
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected YYYY-MM-DD')
+    .refine(isRealDate, 'Not a valid calendar date'),
 })
 
 // Completion is the presence of a habit_logs row for (habitId, date):
@@ -26,6 +36,11 @@ export const logsRoutes = new Hono()
   .post('/toggle', validate('json', toggleLog), async (c) => {
     const user = c.get('user')
     const { habitId, date } = c.req.valid('json')
+
+    // Reject future dates server-side (not just in the UI). Compared as
+    // YYYY-MM-DD strings, which sort lexicographically the same as by date.
+    const today = new Date().toISOString().slice(0, 10)
+    if (date > today) return c.json({ error: 'Cannot log future dates' }, 400)
 
     // Never trust a client-supplied habitId: verify ownership before mutating.
     const habit = await db.query.habits.findFirst({
