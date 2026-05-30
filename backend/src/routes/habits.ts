@@ -1,25 +1,13 @@
 import { Hono } from 'hono'
-import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
 import { and, asc, count, eq, max } from 'drizzle-orm'
 import { db } from '../db'
 import { habits as habitsTable, habitLogs } from '../db/schema'
+import { apiError, ErrorCode, validate } from '../lib/errors'
 import { requireAuth } from '../lib/middleware'
 import { computeStreaks } from '../lib/streaks'
 
 const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Invalid hex color')
-
-// Consistent { error, issues } shape on validation failure (matches the
-// { error } convention used elsewhere).
-// `Target` must stay a literal ('json' | 'query'), not widen to the union —
-// otherwise Hono RPC infers every route as validating both targets, corrupting
-// the typed client (it would demand a bogus `query`/`json` on each call).
-const validate = <Target extends 'json' | 'query', T extends z.ZodType>(target: Target, schema: T) =>
-  zValidator(target, schema, (result, c) => {
-    if (!result.success) {
-      return c.json({ error: 'Invalid input', issues: result.error.issues }, 400)
-    }
-  })
 
 const createHabit = z.object({
   name: z.string().trim().min(1).max(100),
@@ -82,7 +70,7 @@ export const habitsRoutes = new Hono()
     const habit = await db.query.habits.findFirst({
       where: and(eq(habitsTable.id, id), eq(habitsTable.userId, user.id)),
     })
-    if (!habit) return c.json({ error: 'Habit not found' }, 404)
+    if (!habit) return apiError(c, 404, 'Habit not found', ErrorCode.NOT_FOUND)
 
     const logs = await db
       .select({ date: habitLogs.date })
@@ -122,7 +110,7 @@ export const habitsRoutes = new Hono()
       .where(and(eq(habitsTable.id, id), eq(habitsTable.userId, user.id)))
       .returning()
 
-    if (!updated) return c.json({ error: 'Habit not found' }, 404)
+    if (!updated) return apiError(c, 404, 'Habit not found', ErrorCode.NOT_FOUND)
     return c.json(updated)
   })
   .delete('/:id/archive', async (c) => {
@@ -135,7 +123,7 @@ export const habitsRoutes = new Hono()
       .where(and(eq(habitsTable.id, id), eq(habitsTable.userId, user.id)))
       .returning()
 
-    if (!archived) return c.json({ error: 'Habit not found' }, 404)
+    if (!archived) return apiError(c, 404, 'Habit not found', ErrorCode.NOT_FOUND)
     return c.json(archived)
   })
   .delete('/:id/unarchive', async (c) => {
@@ -148,7 +136,7 @@ export const habitsRoutes = new Hono()
       .where(and(eq(habitsTable.id, id), eq(habitsTable.userId, user.id)))
       .returning()
 
-    if (!restored) return c.json({ error: 'Habit not found' }, 404)
+    if (!restored) return apiError(c, 404, 'Habit not found', ErrorCode.NOT_FOUND)
     return c.json(restored)
   })
   .delete('/:id', async (c) => {
@@ -158,7 +146,7 @@ export const habitsRoutes = new Hono()
     const habit = await db.query.habits.findFirst({
       where: and(eq(habitsTable.id, id), eq(habitsTable.userId, user.id)),
     })
-    if (!habit) return c.json({ error: 'Habit not found' }, 404)
+    if (!habit) return apiError(c, 404, 'Habit not found', ErrorCode.NOT_FOUND)
 
     const [logs] = await db
       .select({ value: count() })
@@ -166,7 +154,12 @@ export const habitsRoutes = new Hono()
       .where(and(eq(habitLogs.habitId, id), eq(habitLogs.userId, user.id)))
 
     if ((logs?.value ?? 0) > 0) {
-      return c.json({ error: 'Cannot delete a habit with logged completions; archive it instead' }, 409)
+      return apiError(
+        c,
+        409,
+        'Cannot delete a habit with logged completions; archive it instead',
+        ErrorCode.CONFLICT,
+      )
     }
 
     await db.delete(habitsTable).where(and(eq(habitsTable.id, id), eq(habitsTable.userId, user.id)))
@@ -183,6 +176,6 @@ export const habitsRoutes = new Hono()
       .where(and(eq(habitsTable.id, id), eq(habitsTable.userId, user.id)))
       .returning()
 
-    if (!updated) return c.json({ error: 'Habit not found' }, 404)
+    if (!updated) return apiError(c, 404, 'Habit not found', ErrorCode.NOT_FOUND)
     return c.json(updated)
   })

@@ -1,18 +1,10 @@
 import { Hono } from 'hono'
-import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
 import { and, eq } from 'drizzle-orm'
 import { db } from '../db'
 import { habits as habitsTable, habitLogs } from '../db/schema'
+import { apiError, ErrorCode, validate } from '../lib/errors'
 import { requireAuth } from '../lib/middleware'
-
-// Consistent { error, issues } shape on validation failure (matches habits.ts).
-const validate = <T extends z.ZodType>(target: 'json', schema: T) =>
-  zValidator(target, schema, (result, c) => {
-    if (!result.success) {
-      return c.json({ error: 'Invalid input', issues: result.error.issues }, 400)
-    }
-  })
 
 // True only for real calendar dates: rejects impossible dates like 2026-02-30
 // or 2026-13-45 (the regex alone would let those through).
@@ -40,13 +32,13 @@ export const logsRoutes = new Hono()
     // Reject future dates server-side (not just in the UI). Compared as
     // YYYY-MM-DD strings, which sort lexicographically the same as by date.
     const today = new Date().toISOString().slice(0, 10)
-    if (date > today) return c.json({ error: 'Cannot log future dates' }, 400)
+    if (date > today) return apiError(c, 400, 'Cannot log future dates', ErrorCode.BAD_REQUEST)
 
     // Never trust a client-supplied habitId: verify ownership before mutating.
     const habit = await db.query.habits.findFirst({
       where: and(eq(habitsTable.id, habitId), eq(habitsTable.userId, user.id)),
     })
-    if (!habit) return c.json({ error: 'Habit not found' }, 404)
+    if (!habit) return apiError(c, 404, 'Habit not found', ErrorCode.NOT_FOUND)
 
     const existing = await db.query.habitLogs.findFirst({
       where: and(

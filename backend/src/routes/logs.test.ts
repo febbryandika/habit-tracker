@@ -10,7 +10,7 @@ describe('log routes require auth', () => {
       body: JSON.stringify({ habitId: 'abc', date: '2026-05-30' }),
     })
     expect(res.status).toBe(401)
-    expect(await res.json()).toEqual({ error: 'Unauthorized' })
+    expect(await res.json()).toEqual({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
   })
 })
 
