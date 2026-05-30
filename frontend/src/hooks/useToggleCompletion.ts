@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { client } from '../lib/client'
+import { throwApiError } from '../lib/api-error'
 import type { DashboardHabit } from '../components/HabitCard'
 
 const dashboardKey = ['dashboard'] as const
@@ -18,7 +19,7 @@ export function useToggleCompletion(habitId: string) {
   return useMutation({
     mutationFn: async () => {
       const res = await client.api.logs.toggle.$post({ json: { habitId, date: today() } })
-      if (!res.ok) throw new Error('Failed to toggle completion')
+      if (!res.ok) await throwApiError(res)
       return res.json()
     },
     onMutate: async () => {

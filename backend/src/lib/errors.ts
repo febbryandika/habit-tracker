@@ -27,9 +27,12 @@ export type ApiErrorBody = {
 
 // Build a standardized error response. Use this everywhere instead of inline
 // `c.json({ error }, status)` so the shape is defined in one place.
-export function apiError(
+// Generic over the status literal so Hono RPC keeps each route's exact status
+// codes (a plain `ContentfulStatusCode` would widen them and corrupt the typed
+// client's success-response inference).
+export function apiError<S extends ContentfulStatusCode>(
   c: Context,
-  status: ContentfulStatusCode,
+  status: S,
   message: string,
   code: ErrorCode,
   issues?: unknown,

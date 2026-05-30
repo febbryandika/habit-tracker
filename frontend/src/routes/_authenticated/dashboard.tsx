@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { client } from '../../lib/client'
+import { throwApiError } from '../../lib/api-error'
 import { HabitCard } from '../../components/HabitCard'
 
 export const Route = createFileRoute('/_authenticated/dashboard')({
@@ -12,7 +13,7 @@ function Dashboard() {
     queryKey: ['dashboard'],
     queryFn: async () => {
       const res = await client.api.dashboard.$get()
-      if (!res.ok) throw new Error('Failed to load dashboard')
+      if (!res.ok) await throwApiError(res)
       return res.json()
     },
   })

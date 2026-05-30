@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { InferRequestType, InferResponseType } from 'hono/client'
 import { client } from '../lib/client'
+import { throwApiError } from '../lib/api-error'
 
 // Habit shape derived from the API contract — no hand-written duplication.
 export type Habit = InferResponseType<typeof client.api.habits.$get, 200>[number]
@@ -17,27 +18,12 @@ export const habitKeys = {
 // Stats response (streaks, 30-day rate, totals, 84-day heatmap) from the contract.
 type HabitStats = InferResponseType<(typeof client.api.habits)[':id']['stats']['$get'], 200>
 
-// Surface the backend's `{ error }` message so callers (dialogs, forms) can show it.
-async function throwApiError(res: { json(): Promise<unknown> }): Promise<never> {
-  let message = 'Something went wrong'
-  try {
-    const body = await res.json()
-    if (body && typeof body === 'object' && 'error' in body) {
-      const { error } = body as { error?: unknown }
-      if (typeof error === 'string') message = error
-    }
-  } catch {
-    // non-JSON response; keep the default message
-  }
-  throw new Error(message)
-}
-
 export function useHabits(archived = false) {
   return useQuery({
     queryKey: habitKeys.list(archived),
     queryFn: async () => {
       const res = await client.api.habits.$get({ query: { archived: archived ? 'true' : 'false' } })
-      if (!res.ok) throw new Error('Failed to load habits')
+      if (!res.ok) await throwApiError(res)
       return (await res.json()) as Habit[]
     },
   })
@@ -48,7 +34,7 @@ export function useHabitStats(habitId: string) {
     queryKey: habitKeys.stats(habitId),
     queryFn: async () => {
       const res = await client.api.habits[':id'].stats.$get({ param: { id: habitId } })
-      if (!res.ok) throw new Error('Failed to load habit stats')
+      if (!res.ok) await throwApiError(res)
       return (await res.json()) as HabitStats
     },
   })
