@@ -84,7 +84,13 @@ export function HabitRow({
         style={{ backgroundColor: habit.color }}
         aria-hidden="true"
       />
-      <span className="min-w-0 flex-1 truncate font-medium text-slate-900">{habit.name}</span>
+      <Link
+        to="/habits/$habitId"
+        params={{ habitId: habit.id }}
+        className="min-w-0 flex-1 truncate font-medium text-slate-900 transition hover:text-indigo-600"
+      >
+        {habit.name}
+      </Link>
 
       <div className="flex shrink-0 items-center gap-0.5">
         <Link to="/habits/$habitId/edit" params={{ habitId: habit.id }} className={actionClass}>

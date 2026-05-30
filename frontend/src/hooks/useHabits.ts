@@ -11,7 +11,11 @@ type UpdateInput = InferRequestType<(typeof client.api.habits)[':id']['$put']>['
 export const habitKeys = {
   all: ['habits'] as const,
   list: (archived: boolean) => ['habits', { archived }] as const,
+  stats: (id: string) => ['habits', id, 'stats'] as const,
 }
+
+// Stats response (streaks, 30-day rate, totals, 84-day heatmap) from the contract.
+type HabitStats = InferResponseType<(typeof client.api.habits)[':id']['stats']['$get'], 200>
 
 // Surface the backend's `{ error }` message so callers (dialogs, forms) can show it.
 async function throwApiError(res: { json(): Promise<unknown> }): Promise<never> {
@@ -35,6 +39,17 @@ export function useHabits(archived = false) {
       const res = await client.api.habits.$get({ query: { archived: archived ? 'true' : 'false' } })
       if (!res.ok) throw new Error('Failed to load habits')
       return (await res.json()) as Habit[]
+    },
+  })
+}
+
+export function useHabitStats(habitId: string) {
+  return useQuery({
+    queryKey: habitKeys.stats(habitId),
+    queryFn: async () => {
+      const res = await client.api.habits[':id'].stats.$get({ param: { id: habitId } })
+      if (!res.ok) throw new Error('Failed to load habit stats')
+      return (await res.json()) as HabitStats
     },
   })
 }
