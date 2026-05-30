@@ -5,6 +5,7 @@ import { and, asc, count, eq, max } from 'drizzle-orm'
 import { db } from '../db'
 import { habits as habitsTable, habitLogs } from '../db/schema'
 import { requireAuth } from '../lib/middleware'
+import { computeStreaks } from '../lib/streaks'
 
 const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Invalid hex color')
 
@@ -72,6 +73,39 @@ export const habitsRoutes = new Hono()
       .orderBy(asc(habitsTable.sortOrder), asc(habitsTable.createdAt))
 
     return c.json(rows)
+  })
+  .get('/:id/stats', async (c) => {
+    const user = c.get('user')
+    const id = c.req.param('id')
+
+    // Verify ownership before reading any logs — never trust a client-supplied id.
+    const habit = await db.query.habits.findFirst({
+      where: and(eq(habitsTable.id, id), eq(habitsTable.userId, user.id)),
+    })
+    if (!habit) return c.json({ error: 'Habit not found' }, 404)
+
+    const logs = await db
+      .select({ date: habitLogs.date })
+      .from(habitLogs)
+      .where(and(eq(habitLogs.habitId, id), eq(habitLogs.userId, user.id)))
+
+    const dates = logs.map((l) => l.date)
+    const dateSet = new Set(dates)
+    const { current, longest } = computeStreaks(dates)
+
+    // Completion rate over the last 30 days (today + prior 29), as a 0–1 fraction.
+    let last30 = 0
+    for (let i = 0; i < 30; i++) {
+      const day = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10)
+      if (dateSet.has(day)) last30++
+    }
+
+    return c.json({
+      current,
+      longest,
+      completionRate: last30 / 30,
+      totalCompletions: dates.length,
+    })
   })
   .put('/:id', validate('json', updateHabit), async (c) => {
     const user = c.get('user')
