@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { client } from '../lib/client'
 import type { DashboardHabit } from '../components/HabitCard'
 
@@ -44,6 +45,7 @@ export function useToggleCompletion(habitId: string) {
       if (context?.previous) {
         queryClient.setQueryData(dashboardKey, context.previous)
       }
+      toast.error("Couldn't update habit. Please try again.")
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: dashboardKey })
