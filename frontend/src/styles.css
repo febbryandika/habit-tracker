@@ -1,1 +1,19 @@
 @import "tailwindcss";
+
+/* Anchor the emoji popover just below its trigger where supported; without
+   anchor positioning it falls back to the Popover API's centered placement. */
+@layer components {
+  .anchor-emoji {
+    anchor-name: --emoji-anchor;
+  }
+
+  @supports (anchor-name: --x) {
+    .popover-emoji {
+      position-anchor: --emoji-anchor;
+      inset: auto;
+      top: anchor(bottom);
+      left: anchor(left);
+      margin: 0.5rem 0 0;
+    }
+  }
+}
