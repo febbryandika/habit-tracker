@@ -87,6 +87,30 @@ export function useArchiveHabit() {
   })
 }
 
+export function useRestoreHabit() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await client.api.habits[':id'].unarchive.$delete({ param: { id } })
+      if (!res.ok) await throwApiError(res)
+      return (await res.json()) as Habit
+    },
+    // Optimistically drop the habit from the archived list; it reappears under Active.
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: habitKeys.list(true) })
+      const previous = queryClient.getQueryData<Habit[]>(habitKeys.list(true))
+      queryClient.setQueryData<Habit[]>(habitKeys.list(true), (old) =>
+        old?.filter((h) => h.id !== id),
+      )
+      return { previous }
+    },
+    onError: (_err, _id, ctx) => {
+      if (ctx?.previous) queryClient.setQueryData(habitKeys.list(true), ctx.previous)
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: habitKeys.all }),
+  })
+}
+
 // Not optimistic: delete can fail with 409 (habit has logs); the confirm dialog
 // shows the pending state and surfaces the error instead of flickering the row.
 export function useDeleteHabit() {

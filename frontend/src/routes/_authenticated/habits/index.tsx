@@ -68,7 +68,7 @@ function HabitsPage() {
           <ul className="space-y-2">
             {habits.data.map((habit) => (
               <li key={habit.id}>
-                <HabitRow habit={habit} />
+                <HabitRow habit={habit} archived={archived} />
               </li>
             ))}
           </ul>
