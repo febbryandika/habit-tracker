@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { HabitForm } from '../../../components/HabitForm'
+import { Skeleton } from '../../../components/Skeleton'
 import { useHabits, useUpdateHabit } from '../../../hooks/useHabits'
 
 export const Route = createFileRoute('/_authenticated/habits/$habitId/edit')({
@@ -29,7 +30,18 @@ function EditHabitPage() {
 
       <div className="mt-6 max-w-md">
         {isLoading ? (
-          <p className="text-sm text-slate-500">Loading…</p>
+          <div role="status" aria-busy="true" className="space-y-5">
+            <span className="sr-only">Loading…</span>
+            <div aria-hidden className="space-y-2">
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-10 w-full rounded-lg" />
+            </div>
+            <div aria-hidden className="space-y-2">
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-10 w-full rounded-lg" />
+            </div>
+            <Skeleton className="h-10 w-32 rounded-lg" />
+          </div>
         ) : !habit ? (
           <p className="text-sm text-slate-500">
             Habit not found.{' '}

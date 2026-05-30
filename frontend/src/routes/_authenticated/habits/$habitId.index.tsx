@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useHabits, useHabitStats } from '../../../hooks/useHabits'
 import { HabitStats } from '../../../components/HabitStats'
+import { HabitStatsSkeleton } from '../../../components/HabitStatsSkeleton'
 import { Heatmap } from '../../../components/Heatmap'
+import { Skeleton } from '../../../components/Skeleton'
 
 export const Route = createFileRoute('/_authenticated/habits/$habitId/')({
   component: HabitDetailPage,
@@ -25,7 +27,12 @@ function HabitDetailPage() {
       </Link>
 
       {habitLoading ? (
-        <p className="mt-4 text-sm text-slate-500">Loading…</p>
+        <>
+          <Skeleton className="mt-2 h-8 w-48" />
+          <div className="mt-6">
+            <HabitStatsSkeleton />
+          </div>
+        </>
       ) : !habit ? (
         <p className="mt-4 text-sm text-slate-500">
           Habit not found.{' '}
@@ -42,7 +49,7 @@ function HabitDetailPage() {
 
           <div className="mt-6">
             {stats.isPending ? (
-              <p className="text-sm text-slate-500">Loading stats…</p>
+              <HabitStatsSkeleton />
             ) : stats.isError ? (
               <p role="alert" className="text-sm font-medium text-red-600">
                 Couldn't load stats. Please refresh to try again.
