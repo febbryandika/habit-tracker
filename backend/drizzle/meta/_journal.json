@@ -15,6 +15,13 @@
       "when": 1780044484253,
       "tag": "0001_third_the_hand",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780187304703,
+      "tag": "0002_freezing_sebastian_shaw",
+      "breakpoints": true
     }
   ]
 }

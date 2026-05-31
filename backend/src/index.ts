@@ -1,7 +1,8 @@
 import { Hono } from 'hono'
 import { auth } from './lib/auth'
 import { handleError } from './lib/errors'
-import { requireAuth } from './lib/middleware'
+import { requestLogger, requireAuth } from './lib/middleware'
+import { authRateLimit } from './lib/rate-limit'
 import { habitsRoutes } from './routes/habits'
 import { logsRoutes } from './routes/logs'
 import { dashboardRoutes } from './routes/dashboard'
@@ -10,6 +11,10 @@ const app = new Hono()
 
 // Standardized JSON for thrown errors, incl. a safe 500 for unexpected failures.
 app.onError((err, c) => handleError(err, c))
+
+app.use('/api/*', requestLogger)
+
+app.use('/api/auth/*', authRateLimit)
 
 // Public: better-auth serves register/login/logout under /api/auth/*
 app.on(['POST', 'GET'], '/api/auth/*', (c) => auth.handler(c.req.raw))
