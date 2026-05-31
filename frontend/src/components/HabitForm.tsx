@@ -9,6 +9,17 @@ const EMOJIS = ['✅', '🏃', '📚', '💧', '🧘', '💪', '🛌', '🥗', '
 
 const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#ef4444', '#f59e0b', '#10b981', '#14b8a6', '#3b82f6']
 
+const COLOR_NAMES: Record<string, string> = {
+  '#6366f1': 'Indigo',
+  '#8b5cf6': 'Violet',
+  '#ec4899': 'Pink',
+  '#ef4444': 'Red',
+  '#f59e0b': 'Amber',
+  '#10b981': 'Emerald',
+  '#14b8a6': 'Teal',
+  '#3b82f6': 'Blue',
+}
+
 type HabitFormProps = {
   initialValues?: Partial<HabitFormValues>
   submitLabel: string
@@ -73,6 +84,7 @@ export function HabitForm({ initialValues, submitLabel, isSubmitting, formError,
 function EmojiPicker({ value, onChange }: { value: string; onChange: (emoji: string) => void }) {
   const popoverId = useId()
   const popoverRef = useRef<HTMLDivElement>(null)
+  const [open, setOpen] = useState(false)
 
   return (
     <div>
@@ -80,6 +92,7 @@ function EmojiPicker({ value, onChange }: { value: string; onChange: (emoji: str
       <button
         type="button"
         popoverTarget={popoverId}
+        aria-expanded={open}
         aria-label={`Icon: ${value}. Choose a different one`}
         className="anchor-emoji mt-1 grid size-11 place-items-center rounded-lg border border-slate-300 text-2xl shadow-sm transition hover:border-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-200"
       >
@@ -90,6 +103,7 @@ function EmojiPicker({ value, onChange }: { value: string; onChange: (emoji: str
         ref={popoverRef}
         id={popoverId}
         popover="auto"
+        onToggle={() => setOpen(popoverRef.current?.matches(':popover-open') ?? false)}
         className="popover-emoji rounded-xl bg-white p-2 shadow-lg ring-1 ring-slate-200"
       >
         <div className="grid grid-cols-6 gap-1">
@@ -123,7 +137,7 @@ function ColorSwatches({ value, onChange }: { value: string; onChange: (color: s
           <button
             key={color}
             type="button"
-            aria-label={color}
+            aria-label={COLOR_NAMES[color] ?? color}
             aria-pressed={value === color}
             onClick={() => onChange(color)}
             style={{ backgroundColor: color }}

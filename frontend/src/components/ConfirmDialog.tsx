@@ -57,7 +57,7 @@ export function ConfirmDialog({
             type="button"
             onClick={onClose}
             disabled={isPending}
-            className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 disabled:opacity-60"
+            className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-slate-300 disabled:opacity-60"
           >
             Cancel
           </button>
