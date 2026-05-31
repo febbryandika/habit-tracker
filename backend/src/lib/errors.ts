@@ -3,6 +3,7 @@ import { HTTPException } from 'hono/http-exception'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import { zValidator } from '@hono/zod-validator'
 import type { z } from 'zod'
+import { logger } from './logger'
 
 // Machine-readable error codes paired with every API error response.
 export const ErrorCode = {
@@ -71,6 +72,11 @@ export function handleError(err: Error, c: Context) {
     const code = STATUS_TO_CODE[err.status] ?? ErrorCode.INTERNAL_ERROR
     return apiError(c, err.status, err.message || 'Request failed', code)
   }
-  console.error('Unhandled API error:', err)
+  logger.error('unhandled_error', {
+    method: c.req.method,
+    path: c.req.path,
+    error: err.message,
+    stack: err.stack,
+  })
   return apiError(c, 500, 'Internal server error', ErrorCode.INTERNAL_ERROR)
 }
