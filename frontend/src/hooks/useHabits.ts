@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { InferRequestType, InferResponseType } from 'hono/client'
 import { client } from '../lib/client'
+import { throwApiError } from '../lib/api-error'
+import { optimisticListUpdate } from '../lib/optimistic'
 
 // Habit shape derived from the API contract — no hand-written duplication.
 export type Habit = InferResponseType<typeof client.api.habits.$get, 200>[number]
@@ -17,27 +19,12 @@ export const habitKeys = {
 // Stats response (streaks, 30-day rate, totals, 84-day heatmap) from the contract.
 type HabitStats = InferResponseType<(typeof client.api.habits)[':id']['stats']['$get'], 200>
 
-// Surface the backend's `{ error }` message so callers (dialogs, forms) can show it.
-async function throwApiError(res: { json(): Promise<unknown> }): Promise<never> {
-  let message = 'Something went wrong'
-  try {
-    const body = await res.json()
-    if (body && typeof body === 'object' && 'error' in body) {
-      const { error } = body as { error?: unknown }
-      if (typeof error === 'string') message = error
-    }
-  } catch {
-    // non-JSON response; keep the default message
-  }
-  throw new Error(message)
-}
-
 export function useHabits(archived = false) {
   return useQuery({
     queryKey: habitKeys.list(archived),
     queryFn: async () => {
       const res = await client.api.habits.$get({ query: { archived: archived ? 'true' : 'false' } })
-      if (!res.ok) throw new Error('Failed to load habits')
+      if (!res.ok) await throwApiError(res)
       return (await res.json()) as Habit[]
     },
   })
@@ -48,7 +35,7 @@ export function useHabitStats(habitId: string) {
     queryKey: habitKeys.stats(habitId),
     queryFn: async () => {
       const res = await client.api.habits[':id'].stats.$get({ param: { id: habitId } })
-      if (!res.ok) throw new Error('Failed to load habit stats')
+      if (!res.ok) await throwApiError(res)
       return (await res.json()) as HabitStats
     },
   })
@@ -62,6 +49,8 @@ export function useCreateHabit() {
       if (!res.ok) await throwApiError(res)
       return (await res.json()) as Habit
     },
+    // Form renders its own error inline; only toast the success here.
+    meta: { successMessage: 'Habit created', suppressErrorToast: true },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: habitKeys.all }),
   })
 }
@@ -74,54 +63,50 @@ export function useUpdateHabit() {
       if (!res.ok) await throwApiError(res)
       return (await res.json()) as Habit
     },
+    // Form renders its own error inline; only toast the success here.
+    meta: { successMessage: 'Habit updated', suppressErrorToast: true },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: habitKeys.all }),
   })
 }
 
 export function useArchiveHabit() {
   const queryClient = useQueryClient()
+  // Optimistically drop the habit from the active list; it reappears under Archived.
+  const optimistic = optimisticListUpdate<Habit[], string>(
+    queryClient,
+    habitKeys.list(false),
+    (previous, id) => previous?.filter((h) => h.id !== id),
+  )
   return useMutation({
     mutationFn: async (id: string) => {
       const res = await client.api.habits[':id'].archive.$delete({ param: { id } })
       if (!res.ok) await throwApiError(res)
       return (await res.json()) as Habit
     },
-    // Optimistically drop the habit from the active list; it reappears under Archived.
-    onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: habitKeys.list(false) })
-      const previous = queryClient.getQueryData<Habit[]>(habitKeys.list(false))
-      queryClient.setQueryData<Habit[]>(habitKeys.list(false), (old) =>
-        old?.filter((h) => h.id !== id),
-      )
-      return { previous }
-    },
-    onError: (_err, _id, ctx) => {
-      if (ctx?.previous) queryClient.setQueryData(habitKeys.list(false), ctx.previous)
-    },
+    meta: { successMessage: 'Habit archived' },
+    onMutate: optimistic.onMutate,
+    onError: optimistic.onError,
     onSettled: () => queryClient.invalidateQueries({ queryKey: habitKeys.all }),
   })
 }
 
 export function useRestoreHabit() {
   const queryClient = useQueryClient()
+  // Optimistically drop the habit from the archived list; it reappears under Active.
+  const optimistic = optimisticListUpdate<Habit[], string>(
+    queryClient,
+    habitKeys.list(true),
+    (previous, id) => previous?.filter((h) => h.id !== id),
+  )
   return useMutation({
     mutationFn: async (id: string) => {
       const res = await client.api.habits[':id'].unarchive.$delete({ param: { id } })
       if (!res.ok) await throwApiError(res)
       return (await res.json()) as Habit
     },
-    // Optimistically drop the habit from the archived list; it reappears under Active.
-    onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: habitKeys.list(true) })
-      const previous = queryClient.getQueryData<Habit[]>(habitKeys.list(true))
-      queryClient.setQueryData<Habit[]>(habitKeys.list(true), (old) =>
-        old?.filter((h) => h.id !== id),
-      )
-      return { previous }
-    },
-    onError: (_err, _id, ctx) => {
-      if (ctx?.previous) queryClient.setQueryData(habitKeys.list(true), ctx.previous)
-    },
+    meta: { successMessage: 'Habit restored' },
+    onMutate: optimistic.onMutate,
+    onError: optimistic.onError,
     onSettled: () => queryClient.invalidateQueries({ queryKey: habitKeys.all }),
   })
 }
@@ -136,6 +121,8 @@ export function useDeleteHabit() {
       if (!res.ok) await throwApiError(res)
       return (await res.json()) as { success: true }
     },
+    // Confirm dialog renders its own error inline; only toast the success here.
+    meta: { successMessage: 'Habit deleted', suppressErrorToast: true },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: habitKeys.all }),
   })
 }
@@ -143,6 +130,11 @@ export function useDeleteHabit() {
 // Accepts the new active-list order; persists only habits whose position changed.
 export function useReorderHabits() {
   const queryClient = useQueryClient()
+  const optimistic = optimisticListUpdate<Habit[], Habit[]>(
+    queryClient,
+    habitKeys.list(false),
+    (_previous, ordered) => ordered.map((habit, index) => ({ ...habit, sortOrder: index })),
+  )
   return useMutation({
     mutationFn: async (ordered: Habit[]) => {
       const changed = ordered
@@ -158,18 +150,8 @@ export function useReorderHabits() {
         }),
       )
     },
-    onMutate: async (ordered) => {
-      await queryClient.cancelQueries({ queryKey: habitKeys.list(false) })
-      const previous = queryClient.getQueryData<Habit[]>(habitKeys.list(false))
-      queryClient.setQueryData<Habit[]>(
-        habitKeys.list(false),
-        ordered.map((habit, index) => ({ ...habit, sortOrder: index })),
-      )
-      return { previous }
-    },
-    onError: (_err, _ordered, ctx) => {
-      if (ctx?.previous) queryClient.setQueryData(habitKeys.list(false), ctx.previous)
-    },
+    onMutate: optimistic.onMutate,
+    onError: optimistic.onError,
     onSettled: () => queryClient.invalidateQueries({ queryKey: habitKeys.list(false) }),
   })
 }
