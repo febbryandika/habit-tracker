@@ -13,6 +13,7 @@ export const ErrorCode = {
   CONFLICT: 'CONFLICT',
   VALIDATION_ERROR: 'VALIDATION_ERROR',
   INTERNAL_ERROR: 'INTERNAL_ERROR',
+  TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
 } as const
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode]
@@ -62,6 +63,7 @@ const STATUS_TO_CODE: Partial<Record<number, ErrorCode>> = {
   401: ErrorCode.UNAUTHORIZED,
   404: ErrorCode.NOT_FOUND,
   409: ErrorCode.CONFLICT,
+  429: ErrorCode.TOO_MANY_REQUESTS,
 }
 
 // Global handler for app.onError: re-emits thrown HTTPExceptions in the standard
