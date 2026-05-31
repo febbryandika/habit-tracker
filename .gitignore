@@ -87,3 +87,5 @@ playwright/.cache/
 
 # Private project docs (planning, specs)
 docs/
+!docs/screenshots/
+!docs/screenshots/**

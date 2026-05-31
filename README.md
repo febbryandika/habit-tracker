@@ -19,7 +19,25 @@ A personal habit tracking app where authenticated users define daily habits, log
 
 ## Screenshots
 
-_Coming soon — see [Task 5]._
+| Login | Register |
+|---|---|
+| ![Login page](docs/screenshots/01-login.png) | ![Register page](docs/screenshots/02-register.png) |
+
+**Dashboard** — today's habits with streak badges and completion toggles. Three habits marked done (filled ring), one pending.
+
+![Dashboard](docs/screenshots/03-dashboard.png)
+
+**Habits list** — all habits with drag-to-reorder, edit, archive, and delete actions.
+
+![Habits list](docs/screenshots/04-habits-list.png)
+
+**Habit detail** — 12-week heatmap and stats cards (current streak, longest streak, completion rate, total completions).
+
+![Habit detail with heatmap](docs/screenshots/05-habit-detail.png)
+
+**New habit form** — name, emoji picker, and colour swatches.
+
+![New habit form](docs/screenshots/06-new-habit.png)
 
 ---
 
