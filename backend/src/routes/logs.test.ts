@@ -32,4 +32,12 @@ describe('toggleLog date validation', () => {
   it('rejects an empty habitId', () => {
     expect(toggleLog.safeParse({ habitId: '', date: '2026-05-30' }).success).toBe(false)
   })
+
+  it('accepts Feb 29 on a leap year', () => {
+    expect(toggleLog.safeParse({ habitId: 'abc', date: '2024-02-29' }).success).toBe(true)
+  })
+
+  it('rejects Feb 29 on a non-leap year', () => {
+    expect(toggleLog.safeParse({ habitId: 'abc', date: '2025-02-29' }).success).toBe(false)
+  })
 })
