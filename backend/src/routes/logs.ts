@@ -1,25 +1,10 @@
 import { Hono } from 'hono'
-import { z } from 'zod'
 import { and, eq } from 'drizzle-orm'
 import { db } from '../db'
 import { habits as habitsTable, habitLogs } from '../db/schema'
 import { apiError, ErrorCode, validate } from '../lib/errors'
 import { requireAuth } from '../lib/middleware'
-
-// True only for real calendar dates: rejects impossible dates like 2026-02-30
-// or 2026-13-45 (the regex alone would let those through).
-const isRealDate = (date: string): boolean => {
-  const parsed = new Date(`${date}T00:00:00Z`)
-  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === date
-}
-
-export const toggleLog = z.object({
-  habitId: z.string().min(1),
-  date: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected YYYY-MM-DD')
-    .refine(isRealDate, 'Not a valid calendar date'),
-})
+import { toggleLog } from '../lib/validation'
 
 // Completion is the presence of a habit_logs row for (habitId, date):
 // toggle on inserts, toggle off deletes. Every query is scoped by userId.

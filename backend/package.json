@@ -5,6 +5,10 @@
   "exports": {
     ".": {
       "types": "./src/index.ts"
+    },
+    "./validation": {
+      "types": "./src/lib/validation.ts",
+      "default": "./src/lib/validation.ts"
     }
   },
   "scripts": {

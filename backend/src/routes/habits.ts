@@ -1,35 +1,11 @@
 import { Hono } from 'hono'
-import { z } from 'zod'
 import { and, asc, count, eq, max } from 'drizzle-orm'
 import { db } from '../db'
 import { habits as habitsTable, habitLogs } from '../db/schema'
 import { apiError, ErrorCode, validate } from '../lib/errors'
 import { requireAuth } from '../lib/middleware'
 import { computeStreaks } from '../lib/streaks'
-
-const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Invalid hex color')
-
-const createHabit = z.object({
-  name: z.string().trim().min(1).max(100),
-  emoji: z.string().min(1).max(8).default('✅'),
-  color: hexColor.default('#6366f1'),
-})
-
-const listQuery = z.object({
-  archived: z.enum(['true', 'false']).optional(),
-})
-
-const updateHabit = z
-  .object({
-    name: z.string().trim().min(1).max(100).optional(),
-    emoji: z.string().min(1).max(8).optional(),
-    color: hexColor.optional(),
-  })
-  .refine((o) => Object.keys(o).length > 0, { message: 'No fields to update' })
-
-const reorderHabit = z.object({
-  sortOrder: z.number().int().min(0),
-})
+import { createHabit, listQuery, updateHabit, reorderHabit } from '../lib/validation'
 
 // All habit routes require a session; every query is scoped by userId.
 export const habitsRoutes = new Hono()
