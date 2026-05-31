@@ -97,11 +97,11 @@ export function HabitRow({
           Edit
         </Link>
         {archived ? (
-          <button type="button" onClick={() => setAction('restore')} className={actionClass}>
+          <button type="button" onClick={() => setAction('restore')} aria-label={`Restore ${habit.name}`} className={actionClass}>
             Restore
           </button>
         ) : (
-          <button type="button" onClick={() => setAction('archive')} className={actionClass}>
+          <button type="button" onClick={() => setAction('archive')} aria-label={`Archive ${habit.name}`} className={actionClass}>
             Archive
           </button>
         )}
@@ -111,6 +111,7 @@ export function HabitRow({
             setDeleteError(null)
             setAction('delete')
           }}
+          aria-label={`Delete ${habit.name}`}
           className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-red-600 transition hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-300"
         >
           Delete

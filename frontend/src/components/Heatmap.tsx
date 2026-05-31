@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
+import type { HeatmapCell } from '../hooks/useHabits'
 
-type Cell = { date: string; completed: boolean }
+type Cell = HeatmapCell
 
 type HeatmapProps = {
   cells: Cell[] // last 84 days, oldest → today (from the stats endpoint)

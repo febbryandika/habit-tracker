@@ -17,7 +17,8 @@ export const habitKeys = {
 }
 
 // Stats response (streaks, 30-day rate, totals, 84-day heatmap) from the contract.
-type HabitStats = InferResponseType<(typeof client.api.habits)[':id']['stats']['$get'], 200>
+export type HabitStats = InferResponseType<(typeof client.api.habits)[':id']['stats']['$get'], 200>
+export type HeatmapCell = HabitStats['heatmap'][number]
 
 export function useHabits(archived = false) {
   return useQuery({

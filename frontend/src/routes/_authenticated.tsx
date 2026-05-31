@@ -26,6 +26,12 @@ function AppLayout() {
 
   return (
     <div className="min-h-dvh bg-slate-50 text-slate-900">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-indigo-600 focus:ring-2 focus:ring-indigo-300"
+      >
+        Skip to main content
+      </a>
       <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/80 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center gap-4 px-4 py-3">
           <Link to="/dashboard" className="text-base font-semibold tracking-tight">
@@ -62,7 +68,7 @@ function AppLayout() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 py-8">
+      <main id="main-content" className="mx-auto max-w-3xl px-4 py-8">
         <Outlet />
       </main>
     </div>

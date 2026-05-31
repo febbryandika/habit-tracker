@@ -1,9 +1,6 @@
-type HabitStatsProps = {
-  current: number
-  longest: number
-  completionRate: number // 0–1 fraction over the last 30 days
-  totalCompletions: number
-}
+import type { HabitStats } from '../hooks/useHabits'
+
+type HabitStatsProps = Pick<HabitStats, 'current' | 'longest' | 'completionRate' | 'totalCompletions'>
 
 // Summary cards for the habit detail page: current/longest streaks, completion
 // rate, and total completions. Purely presentational — the detail page passes

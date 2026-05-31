@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { app } from '../index'
-import { toggleLog } from './logs'
+import { toggleLog } from '../lib/validation'
 
 describe('log routes require auth', () => {
   it('rejects POST /api/logs/toggle without a session', async () => {
