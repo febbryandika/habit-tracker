@@ -7,6 +7,12 @@
     "dev": "bun run --filter '*' dev",
     "dev:backend": "bun run --cwd backend dev",
     "dev:frontend": "bun run --cwd frontend dev",
-    "typecheck": "bun run --filter '*' typecheck"
+    "typecheck": "bun run --filter '*' typecheck",
+    "test": "bun run --filter '*' test",
+    "e2e": "bunx playwright test",
+    "e2e:install": "bunx playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
   }
 }

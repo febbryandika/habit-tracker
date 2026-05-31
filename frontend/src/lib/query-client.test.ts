@@ -1,17 +1,17 @@
-import { beforeEach, describe, expect, it, mock } from 'bun:test'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { MutationObserver } from '@tanstack/react-query'
+import { ApiError } from './api-error'
+import { createAppQueryClient } from './query-client'
 
-// Capture toast calls so we can assert the centralized mutation feedback.
-const toastCalls: Array<{ type: 'success' | 'error'; message: string }> = []
-mock.module('sonner', () => ({
+const mockToastSuccess = vi.fn()
+const mockToastError = vi.fn()
+
+vi.mock('sonner', () => ({
   toast: {
-    success: (message: string) => toastCalls.push({ type: 'success', message }),
-    error: (message: string) => toastCalls.push({ type: 'error', message }),
+    success: (message: string) => mockToastSuccess(message),
+    error: (message: string) => mockToastError(message),
   },
 }))
-
-const { ApiError } = await import('./api-error')
-const { createAppQueryClient } = await import('./query-client')
-const { MutationObserver } = await import('@tanstack/react-query')
 
 function mockRouter(pathname: string) {
   const navigations: Array<{ to: string; search: { redirect: string } }> = []
@@ -44,7 +44,8 @@ async function runMutation(router: unknown, options: MutationConfig) {
 }
 
 beforeEach(() => {
-  toastCalls.length = 0
+  mockToastSuccess.mockClear()
+  mockToastError.mockClear()
 })
 
 describe('createAppQueryClient — unauthorized handling', () => {
@@ -71,7 +72,8 @@ describe('createAppQueryClient — mutation toasts', () => {
   it('toasts the meta success message on success', async () => {
     const { router } = mockRouter('/habits')
     await runMutation(router, { mutationFn: async () => 'ok', meta: { successMessage: 'Habit created' } })
-    expect(toastCalls).toEqual([{ type: 'success', message: 'Habit created' }])
+    expect(mockToastSuccess).toHaveBeenCalledWith('Habit created')
+    expect(mockToastError).not.toHaveBeenCalled()
   })
 
   it('toasts the error message on a non-401 failure', async () => {
@@ -79,7 +81,7 @@ describe('createAppQueryClient — mutation toasts', () => {
     await runMutation(router, {
       mutationFn: () => Promise.reject(new ApiError('Cannot delete', 409, 'CONFLICT')),
     })
-    expect(toastCalls).toEqual([{ type: 'error', message: 'Cannot delete' }])
+    expect(mockToastError).toHaveBeenCalledWith('Cannot delete')
   })
 
   it('suppresses the error toast when meta.suppressErrorToast is set', async () => {
@@ -88,7 +90,7 @@ describe('createAppQueryClient — mutation toasts', () => {
       mutationFn: () => Promise.reject(new ApiError('Cannot delete', 409, 'CONFLICT')),
       meta: { suppressErrorToast: true },
     })
-    expect(toastCalls).toEqual([])
+    expect(mockToastError).not.toHaveBeenCalled()
   })
 
   it('redirects without toasting on a 401 mutation failure', async () => {
@@ -97,6 +99,6 @@ describe('createAppQueryClient — mutation toasts', () => {
       mutationFn: () => Promise.reject(new ApiError('Unauthorized', 401, 'UNAUTHORIZED')),
     })
     expect(navigations).toEqual([{ to: '/login', search: { redirect: '/habits' } }])
-    expect(toastCalls).toEqual([])
+    expect(mockToastError).not.toHaveBeenCalled()
   })
 })

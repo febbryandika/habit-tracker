@@ -35,4 +35,26 @@ describe('computeStreaks', () => {
   it('dedupes repeated dates', () => {
     expect(computeStreaks([today, today, today]).current).toBe(1)
   })
+
+  it('stops the current streak at the first gap', () => {
+    // today and 2 days ago logged, but NOT yesterday — streak is 1, not 2
+    const { current, longest } = computeStreaks([daysAgo(0), daysAgo(2)])
+    expect(current).toBe(1)
+    expect(longest).toBe(1)
+  })
+
+  it('handles a single completion today', () => {
+    expect(computeStreaks([today])).toEqual({ current: 1, longest: 1 })
+  })
+
+  it('handles a single completion in the past', () => {
+    // run of 1 — the Math.max(longest, run) at the end must pick it up
+    expect(computeStreaks([daysAgo(5)])).toEqual({ current: 0, longest: 1 })
+  })
+
+  it('current is 0 but longest reflects a past run when today is absent', () => {
+    const { current, longest } = computeStreaks([daysAgo(5), daysAgo(6), daysAgo(7), daysAgo(8)])
+    expect(current).toBe(0)
+    expect(longest).toBe(4)
+  })
 })
