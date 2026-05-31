@@ -13,7 +13,7 @@ export const habits = pgTable(
     isArchived: boolean('is_archived').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => [index('idx_habit_user').on(t.userId)],
+  (t) => [index('idx_habits_user_archived_order').on(t.userId, t.isArchived, t.sortOrder, t.createdAt)],
 )
 
 export const habitLogs = pgTable(
